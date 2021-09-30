@@ -1058,7 +1058,7 @@ if (typeof Set !== 'undefined' && isNative(Set)) {
   _Set = Set;
 } else {
   // a non-standard Set polyfill that only works with primitive keys.
-  _Set = /*@__PURE__*/function () {
+  _Set = function () {
     function Set() {
       this.set = Object.create(null);
     }
@@ -5812,8 +5812,7 @@ var KeepAlive = {
       var exclude = ref.exclude;
 
       if ( // not included
-      include && (!name || !matches(include, name)) || // excluded
-      exclude && name && matches(exclude, name)) {
+      include && (!name || !matches(include, name)) || exclude && name && matches(exclude, name)) {
         return vnode;
       }
 
@@ -8932,6 +8931,7 @@ exports.default = void 0;
 //
 //
 //
+//
 var _default = {
   props: {
     label: {
@@ -8942,7 +8942,15 @@ var _default = {
       type: String,
       default: 'e.g. showpad://file/ed009ca8-cfa6-4286-86ca-e07bc4764588'
     },
+    field: {
+      type: String,
+      default: null
+    },
     value: {
+      type: String,
+      default: null
+    },
+    endpoints: {
       type: Object,
       default: null
     }
@@ -8954,9 +8962,16 @@ var _default = {
       url: ''
     };
   },
-  created: function created() {
+  mounted: function mounted() {
     if (this.value) {
-      this.url = this.value.appLink;
+      var json = JSON.parse(this.value);
+      this.url = json.appLink;
+    }
+  },
+  watch: {
+    value: function value(_value) {
+      var json = JSON.parse(this.value);
+      this.url = json.appLink;
     }
   },
   methods: {
@@ -8985,27 +9000,46 @@ var _default = {
 
       this.$api.get('/showpad/asset/' + id).then(function (data) {
         _this2.loading = false;
-        _this2.value = data.response;
-        console.log(data);
-      }).then(function () {
+        _this2.value = JSON.stringify(data.response);
+
         _this2.$emit("input", _this2.value);
+
+        if (_this2.field) {
+          _this2.saveAsset(data.response);
+        }
       }).catch(function (error) {
         _this2.loading = false;
         _this2.error = error.message;
+        console.log(error);
+      });
+    },
+    saveAsset: function saveAsset(asset) {
+      var page = this.endpoints.model.replace('pages/', '');
+      var params = '?u=' + asset.downloadLink + '&n=' + asset.name + '&p=' + page.replace(/\+/g, '/') + '&f=' + this.field;
+      console.log('page', this.endpoints);
+      this.$api.get('/showpad/asset-save' + params).then(function (data) {
+        console.log('data', data);
+        console.log('/showpad-save-asset/', data.response);
+
+        if (data.blueprint !== 'Stepper') {
+          location.reload();
+        } // location.reload()
+
+      }).catch(function (error) {
         console.log(error);
       });
     }
   }
 };
 exports.default = _default;
-        var $d7151c = exports.default || module.exports;
+        var $0f6626 = exports.default || module.exports;
       
-      if (typeof $d7151c === 'function') {
-        $d7151c = $d7151c.options;
+      if (typeof $0f6626 === 'function') {
+        $0f6626 = $0f6626.options;
       }
     
         /* template */
-        Object.assign($d7151c, (function () {
+        Object.assign($0f6626, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -9018,11 +9052,12 @@ exports.default = _default;
         "k-column",
         { attrs: { width: "5/6" } },
         [
-          _c("k-url-field", {
+          _c("k-text-field", {
             attrs: {
-              name: "url",
+              name: "showpad_app_link",
               label: _vm.label,
-              placeholder: _vm.placeholder
+              placeholder: _vm.placeholder,
+              required: false
             },
             model: {
               value: _vm.url,
@@ -9058,7 +9093,7 @@ exports.default = _default;
                   })
                 : _vm._e(),
               _vm._v(" "),
-              _vm.asset
+              _vm.url && !_vm.loading
                 ? _c("k-icon", {
                     staticStyle: { color: "green" },
                     attrs: { type: "check", size: "small" }
@@ -9113,9 +9148,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$d7151c', $d7151c);
+            api.createRecord('$0f6626', $0f6626);
           } else {
-            api.reload('$d7151c', $d7151c);
+            api.reload('$0f6626', $0f6626);
           }
         }
 
@@ -9126,289 +9161,19 @@ render._withStripped = true
       
       }
     })();
-},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"../node_modules/vue-hot-reload-api/dist/index.js","vue":"../node_modules/vue/dist/vue.runtime.esm.js"}],"components/fields/ShowpadTags.vue":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-var _default = {
-  props: {
-    help: {
-      type: String,
-      default: null
-    },
-    label: {
-      type: String,
-      default: 'Showpad Tags'
-    },
-    value: {
-      type: String,
-      default: null
-    }
-  },
-  data: function data() {
-    return {
-      options: [],
-      tags: []
-    };
-  },
-  computed: {
-    formatTags: function formatTags() {
-      var array = [];
-      this.tags.forEach(function (element) {
-        array.push(element.value);
-      });
-      return array.join(', ');
-    }
-  },
-  created: function created() {
-    this.getTags();
-  },
-  mounted: function mounted() {
-    var _this = this;
-
-    setTimeout(function () {
-      _this.init();
-    }, 500);
-  },
-  methods: {
-    init: function init() {
-      var _this2 = this;
-
-      var array = this.value.split(', ');
-      array.forEach(function (element) {
-        var entry = {
-          text: element,
-          value: element
-        };
-
-        _this2.tags.push(element);
-      });
-    },
-    getTags: function getTags() {
-      var _this3 = this;
-
-      this.$api.get('/showpad/tags').then(function (data) {
-        var array = data.response.items;
-        array.forEach(function (element) {
-          element.value = element.name;
-          element.text = element.name;
-          delete element.name;
-        });
-        _this3.options = array;
-      });
-    },
-    onInput: function onInput(event) {
-      this.$emit("input", this.formatTags);
-    }
-  }
-};
-exports.default = _default;
-        var $c098d1 = exports.default || module.exports;
-      
-      if (typeof $c098d1 === 'function') {
-        $c098d1 = $c098d1.options;
-      }
-    
-        /* template */
-        Object.assign($c098d1, (function () {
-          var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c("k-tags-field", {
-    attrs: {
-      accept: "options",
-      options: _vm.options,
-      name: "showpad-tags",
-      type: "tags",
-      label: _vm.label,
-      help: _vm.help
-    },
-    on: { input: _vm.onInput },
-    model: {
-      value: _vm.tags,
-      callback: function($$v) {
-        _vm.tags = $$v
-      },
-      expression: "tags"
-    }
-  })
-}
-var staticRenderFns = []
-render._withStripped = true
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-    /* hot reload */
-    (function () {
-      if (module.hot) {
-        var api = require('vue-hot-reload-api');
-        api.install(require('vue'));
-        if (api.compatible) {
-          module.hot.accept();
-          if (!module.hot.data) {
-            api.createRecord('$c098d1', $c098d1);
-          } else {
-            api.reload('$c098d1', $c098d1);
-          }
-        }
-
-        
-      }
-    })();
-},{"vue-hot-reload-api":"../node_modules/vue-hot-reload-api/dist/index.js","vue":"../node_modules/vue/dist/vue.runtime.esm.js"}],"components/fields/ShowpadTagsMode.vue":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-var _default = {
-  props: {
-    label: {
-      type: String,
-      default: 'Mode'
-    },
-    help: {
-      type: String,
-      default: '<em>ALL</em> will fetch assets that are tagged with <u>all</u> of the tags.<br><em>ANY</em> will fetch assets that are tagges with <u>any</u> of the tags.'
-    },
-    value: {
-      type: String,
-      default: 'ALL'
-    }
-  },
-  data: function data() {
-    return {
-      options: [{
-        value: 'ALL',
-        text: 'ALL'
-      }, {
-        value: 'ANY',
-        text: 'ANY'
-      }]
-    };
-  },
-  methods: {
-    onInput: function onInput(event) {
-      this.$emit('input', event);
-    }
-  }
-};
-exports.default = _default;
-        var $056b99 = exports.default || module.exports;
-      
-      if (typeof $056b99 === 'function') {
-        $056b99 = $056b99.options;
-      }
-    
-        /* template */
-        Object.assign($056b99, (function () {
-          var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c("k-radio-field", {
-    attrs: {
-      name: "showpad-tags-mode",
-      options: _vm.options,
-      columns: 2,
-      label: _vm.label,
-      help: _vm.help
-    },
-    on: { input: _vm.onInput },
-    model: {
-      value: _vm.value,
-      callback: function($$v) {
-        _vm.value = $$v
-      },
-      expression: "value"
-    }
-  })
-}
-var staticRenderFns = []
-render._withStripped = true
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-    /* hot reload */
-    (function () {
-      if (module.hot) {
-        var api = require('vue-hot-reload-api');
-        api.install(require('vue'));
-        if (api.compatible) {
-          module.hot.accept();
-          if (!module.hot.data) {
-            api.createRecord('$056b99', $056b99);
-          } else {
-            api.reload('$056b99', $056b99);
-          }
-        }
-
-        
-      }
-    })();
-},{"vue-hot-reload-api":"../node_modules/vue-hot-reload-api/dist/index.js","vue":"../node_modules/vue/dist/vue.runtime.esm.js"}],"index.js":[function(require,module,exports) {
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"../node_modules/vue-hot-reload-api/dist/index.js","vue":"../node_modules/vue/dist/vue.runtime.esm.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _ShowpadAsset = _interopRequireDefault(require("./components/fields/ShowpadAsset.vue"));
-
-var _ShowpadTags = _interopRequireDefault(require("./components/fields/ShowpadTags.vue"));
-
-var _ShowpadTagsMode = _interopRequireDefault(require("./components/fields/ShowpadTagsMode.vue"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 panel.plugin('popcomms/kirby-showpad', {
   fields: {
-    'showpad-asset': _ShowpadAsset.default,
-    'showpad-tags': _ShowpadTags.default,
-    'showpad-tags-mode': _ShowpadTagsMode.default
+    'showpad-asset': _ShowpadAsset.default
   }
 });
-},{"./components/fields/ShowpadAsset.vue":"components/fields/ShowpadAsset.vue","./components/fields/ShowpadTags.vue":"components/fields/ShowpadTags.vue","./components/fields/ShowpadTagsMode.vue":"components/fields/ShowpadTagsMode.vue"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./components/fields/ShowpadAsset.vue":"components/fields/ShowpadAsset.vue"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -9436,7 +9201,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52290" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58175" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

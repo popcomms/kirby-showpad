@@ -1,0 +1,27 @@
+type: group
+
+fields:
+  showpad_tags_headline:
+    type: headline
+    label: Showpad Assets
+    help: Display Showpad assets in the 'Asset Drawer' on this page
+    numbered: false
+  showpad_tags:
+    label: Select Showpad Tags
+    type: multiselect
+    width: 2/3
+    options: api
+    api:
+      url: "{{ site.url }}/showpad/tags"
+      text: "{{ item.name }}"
+      value: "{{ item.name }}"
+  showpad_tags_mode:
+    label: Mode
+    type: radio
+    columns: 2
+    width: 1/3
+    default: all
+    help: <em>ALL</em> will fetch assets that are tagged with <u>all</u> of the tags.<br><em>ANY</em> will fetch assets that are tagges with <u>any</u> of the tags.
+    options:
+      all: ALL
+      any: ANY

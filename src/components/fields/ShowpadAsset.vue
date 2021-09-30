@@ -1,11 +1,12 @@
 <template>
   <k-grid class="showpad-asset-field-grid">
     <k-column width="5/6">
-      <k-url-field
+      <k-text-field
         v-model="url"
-        name="url"
+        name="showpad_app_link"
         :label="label"
         :placeholder="placeholder"
+        :required="false"
       />
     </k-column>
     <k-column width="1/6">
@@ -22,7 +23,7 @@
           class="spin"
         />
         <k-icon
-          v-if="asset"
+          v-if="url && !loading"
           type="check"
           size="small"
           style="color: green"
@@ -50,7 +51,15 @@ export default {
       type: String,
       default: 'e.g. showpad://file/ed009ca8-cfa6-4286-86ca-e07bc4764588'
     },
+    field: {
+      type: String,
+      default: null
+    },
     value: {
+      type: String,
+      default: null
+    },
+    endpoints: {
       type: Object,
       default: null
     }
@@ -62,9 +71,16 @@ export default {
       url: ''
     }
   },
-  created () {
+  mounted () {
     if (this.value) {
-      this.url = this.value.appLink
+      const json = JSON.parse(this.value)
+      this.url = json.appLink
+    }
+  },
+  watch: {
+    value (value) {
+      const json = JSON.parse(this.value)
+      this.url = json.appLink
     }
   },
   methods: {
@@ -75,15 +91,15 @@ export default {
         const slug = this.url.replace('showpad://file/', '')
 
         this.$api.get('/showpad/asset-slug/' + slug)
-        .then((data) => {
-          console.log(data)
-          this.fetchById(data.response.items[0].id)
-        })
-        .catch((error) => {
-          this.loading = false
-          this.error = error.message
-          console.log(error)
-        })
+          .then((data) => {
+            console.log(data)
+            this.fetchById(data.response.items[0].id)
+          })
+          .catch((error) => {
+            this.loading = false
+            this.error = error.message
+            console.log(error)
+          })
       } else {
         this.error = 'Please input a Showpad AppLink URL'
       }
@@ -92,15 +108,34 @@ export default {
       this.$api.get('/showpad/asset/' + id)
         .then((data) => {
           this.loading = false
-          this.value = data.response
-          console.log(data)
-        })
-        .then(() => {
+          this.value = JSON.stringify(data.response)
           this.$emit("input", this.value);
+          if (this.field) {
+            this.saveAsset(data.response)
+          }
         })
         .catch((error) => {
           this.loading = false
           this.error = error.message
+          console.log(error)
+        })
+    },
+    saveAsset (asset) {
+      const page = this.endpoints.model.replace('pages/', '')
+      const params = '?u=' + asset.downloadLink + '&n=' + asset.name + '&p=' + page.replace(/\+/g, '/') + '&f=' + this.field
+
+      console.log('page', this.endpoints);
+
+      this.$api.get('/showpad/asset-save' + params)
+        .then((data) => {
+          console.log('data', data)
+          console.log('/showpad-save-asset/', data.response)
+          if (data.blueprint !== 'Stepper') {
+            location.reload()
+          }
+          // location.reload()
+        })
+        .catch((error) => {
           console.log(error)
         })
     }

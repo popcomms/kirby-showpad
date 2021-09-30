@@ -1,0 +1,16 @@
+type: group
+
+fields:
+  showpad_asset:
+    label: Showpad Asset
+    type: showpad-asset
+    width: 2/3
+    field: 'showpad_asset_preview'
+    placeholder: e.g. showpad://file/e7f33490-1c9b-4def-8929-18eeead006de
+    help: Find your asset in Showpad and copy the 'App Link' value from the 'Info' tab
+
+  showpad_asset_preview:
+    label: Preview
+    type: files
+    multiple: false
+    width: 1/3
