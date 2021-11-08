@@ -1,15 +1,34 @@
 <?php
+
+require_once 'inc/apps-db.php';
+require_once 'inc/assets.php';
+require_once 'inc/tags.php';
+
 Kirby::plugin('popcomms/kirby-showpad', [
+  'blueprints' => [
+    'fields/showpad-apps-db' => __DIR__ . '/blueprints/fields/showpad-apps-db.yml',
+    'fields/showpad-asset'   => __DIR__ . '/blueprints/fields/showpad-asset.yml',
+    'fields/showpad-tags'    => __DIR__ . '/blueprints/fields/showpad-tags.yml'
+  ],
   'fields' => [
     'showpad-asset' => [],
   ],
   'options' => [
-    'domain' => '',
-    'token'  => ''
+    'domain'        => '',
+    'mode'          => '',
+    'client_id'     => '',
+    'client_secret' => '',
+    'username'      => '',
+    'password'      => '',
+    'redirect'      => '',
+    'token'         => '',
   ],
   'api' => [
     'routes' => [
+
+      // Fetch an Apps DB Store
       [
+<<<<<<< Updated upstream
         'pattern' => 'showpad/appsdb/list',
         'method' => 'POST',
         'action' => function () {
@@ -211,128 +230,83 @@ Kirby::plugin('popcomms/kirby-showpad', [
         'action' => function ($all) {
           $kirby = kirby();
           $kirby->impersonate('kirby');
+=======
+        'pattern' => 'showpad/appsdb/(:any)',
+        'method' => 'GET',
+        'action' => function ($store) {
+          AppsDB::getStore($store);
+        }
+      ],
+>>>>>>> Stashed changes
 
-          $url = 'https://' . $kirby->option('popcomms.kirby-showpad.domain') . '.showpad.biz/api/v3/assets/'.$all.'.json';
+      // Populate an Apps DB Store
+      [
+        'pattern' => 'showpad/appsdb/(:all)',
+        'method' => 'POST',
+        'action' => function ($store) {
+          AppsDB::populateStore($store);
+        }
+      ],
 
-          $curl = curl_init();
-          curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-              'Authorization: Bearer ' . $kirby->option('popcomms.kirby-showpad.token')
-            ),
-          ));
+      // Empty an Apps DB Store
+      [
+        'pattern' => 'showpad/appsdb/(:all)',
+        'method' => 'DELETE',
+        'action' => function ($store) {
+          AppsDB::emptyStore($store);
+        }
+      ],
 
-          $response = curl_exec($curl);
-          curl_close($curl);
-          return $response;
+      // Fetch a single entry from Apps DB Store
+      [
+        'pattern' => 'showpad/appsdb/(:any)/(:any)',
+        'method' => 'GET',
+        'action' => function ($store, $id) {
+          AppsDB::getEntry($store, $id);
+        }
+      ],
+
+      // Insert a single entry into Apps DB Store
+      [
+        'pattern' => 'showpad/appsdb/(:any)/(:any)',
+        'method' => 'POST|PUT|UPDATE',
+        'action' => function ($store, $id) {
+          AppsDB::insertEntry($store, $id);
+        }
+      ],
+
+      // Delete a single entry from Apps DB Store
+      [
+        'pattern' => 'showpad/appsdb/(:any)/(:any)',
+        'method' => 'DELETE',
+        'action' => function ($store, $id) {
+          AppsDB::deleteEntry($store, $id);
+        }
+      ],
+
+
+      [
+        'pattern' => 'showpad/asset/(:all)',
+        'action' => function ($all) {
+          return getAsset($all);
         }
       ],
       [
         'pattern' => 'showpad/asset-slug/(:all)',
         'action' => function ($all) {
-          $kirby = kirby();
-          $kirby->impersonate('kirby');
-
-          $url = 'https://' . $kirby->option('popcomms.kirby-showpad.domain') . '.showpad.biz/api/v3/assets.json?slug='.$all;
-
-          $curl = curl_init();
-          curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-              'Authorization: Bearer ' . $kirby->option('popcomms.kirby-showpad.token')
-            ),
-          ));
-
-          $response = curl_exec($curl);
-          curl_close($curl);
-          return $response;
+          return getAssetBySlug($all);
         }
       ],
       [
         'pattern' => 'showpad/asset-external-id/(:all)',
         'action' => function ($all) {
-          $kirby = kirby();
-          $kirby->impersonate('kirby');
-
-          $url = 'https://' . $kirby->option('popcomms.kirby-showpad.domain') . '.showpad.biz/api/v3/assets.json?externalId='.$all;
-
-          $curl = curl_init();
-          curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-              'Authorization: Bearer ' . $kirby->option('popcomms.kirby-showpad.token')
-            ),
-          ));
-
-          $response = curl_exec($curl);
-          curl_close($curl);
-          return $response;
+          return getAssetByExternalId($all);
         }
       ],
       [
         'pattern' => 'showpad/asset-save',
         'action' => function () {
-          $kirby = kirby();
-          $kirby->impersonate('kirby');
-
-          $url = get('u');
-          $field = get('f');
-          $name = str_replace('/', '+', get('n'));
-          $page = $kirby->site()->find(get('p'));
-          $file = $page->root().'/'.$name;
-
-          $curl = curl_init();
-          curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-              'Authorization: Bearer ' . $kirby->option('popcomms.kirby-showpad.token')
-            ),
-          ));
-
-          $response = curl_exec($curl);
-          curl_close($curl);
-
-          F::write($file, $response, false);
-
-          try {
-            $page->update([
-              'showpad_asset_preview' => $name
-            ]);
-            return [
-              'response'  => $file,
-              'blueprint' => $page->blueprint()->title()
-            ];
-          } catch(Exception $e) {
-            echo $e->getMessage();
-          }
+          saveAsset();
         }
       ]
     ]
@@ -342,39 +316,8 @@ Kirby::plugin('popcomms/kirby-showpad', [
       'pattern' => 'showpad/tags',
       'method' => 'GET',
       'action' => function () {
-        $kirby = kirby();
-        $kirby->impersonate('kirby');
-
-        $url = 'https://' . $kirby->option('popcomms.kirby-showpad.domain') . '.showpad.biz/api/v3/tags.json?limit=1000&fields=name';
-
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $url,
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'GET',
-          CURLOPT_HTTPHEADER => array(
-            'Accept: application/json',
-            'Authorization: Bearer ' . $kirby->option('popcomms.kirby-showpad.token')
-          ),
-        ));
-
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $object = json_decode($response);
-        return $object->response->items;
+        return getTags();
       }
     ],
-  ],
-  'snippets' => [
-
-  ],
-  'blueprints' => [
-    'fields/showpad-asset' => __DIR__ . '/blueprints/fields/showpad-asset.yml',
-    'fields/showpad-tags'  => __DIR__ . '/blueprints/fields/showpad-tags.yml'
   ]
 ]);
