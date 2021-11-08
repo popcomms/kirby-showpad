@@ -1,6 +1,7 @@
 <?php
 
 require_once 'auth.php';
+// require 'kirby/bootstrap.php';
 
 class AppsDB {
 
@@ -52,7 +53,7 @@ class AppsDB {
     $kirby = kirby();
     $kirby->impersonate('kirby');
 
-    $token = AppsDB::getToken();
+    $token = getToken();
     $url = 'https://'.$kirby->option('popcomms.kirby-showpad.domain').'.showpad.biz/api/v3/appsdb/stores/'.$store.'/globals/entries';
 
     $curl = curl_init();
@@ -84,18 +85,33 @@ class AppsDB {
   *
   */
 
-  public function populateStore ($store) {
+  function populateStore ($store, $experience) {
     $kirby = kirby();
     $kirby->impersonate('kirby');
+    $site = $kirby->site();
 
-    $json = file_get_contents($kirby->site()->url().'/api/content' . $store, false);
+
+    $token = getToken();
+
+    $auth = base64_encode($kirby->option('popcomms.kirby-showpad.kirby_username') . ":" . $kirby->option('popcomms.kirby-showpad.kirby_password'));
+
+    $context = stream_context_create(array(
+      'http' => array(
+          'header'  => "Authorization: Basic ".$auth
+      )
+    ));
+
+    $json = file_get_contents($kirby->site()->url().'/api/content/'.$experience, false, $context);
+
+
+
     $chunks = AppsDB::chunkJSON($json);
+
     $counter = 1;
-    $token = AppsDB::getToken();
 
     foreach ($chunks as $chunk) {
       $value = addslashes($chunk);
-      AppsDB::insertEntry($store, $counter, $value);
+      AppsDB::insertEntry($store, $counter, $value, $token);
       $counter = $counter + 1;
     }
   }
@@ -108,7 +124,7 @@ class AppsDB {
   *
   */
 
-  public function emptyStore ($store) {
+  function emptyStore ($store) {
 
     $entries = AppsDB::getStore($store);
     $entries = json_decode($entries, true);
@@ -166,7 +182,10 @@ class AppsDB {
   *
   */
 
-  public function insertEntry ($store, $id, $value) {
+  public function insertEntry ($store, $id, $value, $token) {
+    $kirby = kirby();
+    $kirby->impersonate('kirby');
+
     $curl = curl_init();
     $url = 'https://' . $kirby->option('popcomms.kirby-showpad.domain') . '.showpad.biz/api/v3/appsdb/stores/' . $store . '/globals/entries/' . $id;
 
@@ -206,7 +225,7 @@ class AppsDB {
     $kirby = kirby();
     $kirby->impersonate('kirby');
 
-    $token = AppsDB::getToken();
+    $token = getToken();
 
     $url = 'https://'.$kirby->option('popcomms.kirby-showpad.domain').'.showpad.biz/api/v3/appsdb/stores/' . $store . '/globals/entries/' . $id;
 
