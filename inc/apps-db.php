@@ -88,7 +88,7 @@ class AppsDB {
     $kirby = kirby();
     $kirby->impersonate('kirby');
 
-    $json = file_get_contents($kirby->site()->url().'/api/content', false);
+    $json = file_get_contents($kirby->site()->url().'/api/content' . $store, false);
     $chunks = AppsDB::chunkJSON($json);
     $counter = 1;
     $token = AppsDB::getToken();
