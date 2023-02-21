@@ -1,10 +1,13 @@
 <?php
 
+require 'inc/api.php';
+require 'inc/areas.php';
+require 'inc/blueprints.php';
+require 'inc/options.php';
+
 Kirby::plugin('popcomms/kirby-showpad', [
-
-  'areas'      => require 'inc/areas.php',
-	'api'        => require 'inc/api.php',
-  'blueprints' => require 'inc/blueprints.php',
-  'options'    => require 'inc/options.php'
-
+  'api'        => $api,
+  'areas'      => $areas,
+  'blueprints' => $blueprints,
+  'options'    => $options,
 ]);
