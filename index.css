@@ -1,18 +1,2 @@
-.showpad-asset-field-grid {
-  grid-row-gap: 0.5rem;
-}
-.showpad-asset-field {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 1rem;
-}
-.spin {
-  color: green;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+
+/** Put your CSS here **/

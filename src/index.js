@@ -1,7 +1,7 @@
-import ShowpadAsset from './components/fields/ShowpadAsset.vue'
+import DemoSection from "./components/DemoSection.vue";
 
-panel.plugin('popcomms/kirby-showpad', {
-  fields: {
-    'showpad-asset': ShowpadAsset
-  }
+window.panel.plugin("popcomms/kirby-showpad", {
+	sections: {
+		demo: DemoSection
+	}
 });
