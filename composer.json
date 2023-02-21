@@ -1,13 +1,13 @@
 {
-	"name": "getkirby/pluginkit",
-	"description": "Kirby Example Plugin",
+	"name": "popcomms/kirby-showpad",
+	"description": "Kirby Showpad",
 	"license": "MIT",
 	"type": "kirby-plugin",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"authors": [
 		{
-			"name": "Your Name",
-			"email": "you@example.com"
+			"name": "Simon Hayden",
+			"email": "simon@popcomms.com"
 		}
 	],
 	"require": {
